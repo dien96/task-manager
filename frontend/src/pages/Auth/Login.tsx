@@ -1,5 +1,6 @@
 import Input from "@/components/Inputs/Input";
 import AuthLayout from "@/components/layout/AuthLayout";
+import { useUser } from "@/context/useUser";
 import { API_PATHS } from "@/utils/apiPaths";
 import axiosInstance from "@/utils/axiosInstance";
 import { validateEmail } from "@/utils/helper";
@@ -12,6 +13,7 @@ const Login = () => {
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
+  const { updateUser } = useUser();
   const navigate = useNavigate();
 
   // Handle Login Form Submit
@@ -41,6 +43,7 @@ const Login = () => {
 
       if (token) {
         localStorage.setItem("token", token);
+        updateUser(response.data);
 
         // Redirect based on role
         if (role === "admin") {

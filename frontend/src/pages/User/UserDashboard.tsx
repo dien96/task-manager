@@ -1,8 +1,8 @@
+import { useUserAuth } from "@/hooks/useUserAuth";
 
 const UserDashboard = () => {
-  return (
-    <div>Dashboard</div>
-  )
-}
+  useUserAuth();
+  return <div>Dashboard</div>;
+};
 
-export default UserDashboard
+export default UserDashboard;

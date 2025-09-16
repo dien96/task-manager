@@ -1,9 +1,14 @@
 import Input from "@/components/Inputs/Input";
 import ProfilePhotoSelector from "@/components/Inputs/ProfilePhotoSelector";
 import AuthLayout from "@/components/layout/AuthLayout";
+import { UserContext } from "@/context/UserContext";
+import { API_PATHS } from "@/utils/apiPaths";
+import axiosInstance from "@/utils/axiosInstance";
 import { validateEmail } from "@/utils/helper";
-import { useState, type ChangeEvent, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import uploadImage from "@/utils/uploadImage";
+import axios from "axios";
+import { useContext, useState, type ChangeEvent, type FormEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 const SignUp = () => {
   const [profilePic, setProfilePic] = useState<File | null>(null);
@@ -14,9 +19,14 @@ const SignUp = () => {
 
   const [error, setError] = useState<string | null>(null);
 
+  const { updateUser } = useContext(UserContext);
+  const navigate = useNavigate();
+
   // Handle SignUp Form Submit
   const handleSignUp = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    let profileImageUrl: string = "";
 
     if (!fullName) {
       setError("Please enter full name");
@@ -35,6 +45,34 @@ const SignUp = () => {
     setError("");
 
     // SignUp API Call
+    try {
+      // Upload image if present
+      if (profilePic) {
+        const imgUploadRes = await uploadImage(profilePic);
+        profileImageUrl = imgUploadRes.imageUrl || "";
+      }
+      const response = await axiosInstance.post(API_PATHS.AUTH.REGISTER, {
+        name: fullName,
+        email,
+        password,
+        profileImageUrl,
+        adminInviteToken,
+      });
+
+      const { token, role } = response.data;
+
+      if (token) {
+        localStorage.setItem("token", token);
+        updateUser(response.data);
+        navigate("/user/dashboard");
+      }
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response) {
+        setError(error.response.data.message);
+      } else {
+        setError("Something went wrong, Please try again.");
+      }
+    }
   };
   return (
     <AuthLayout>
@@ -50,7 +88,9 @@ const SignUp = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               value={fullName}
-              onChange={({ target }) => setFullName(target.value)}
+              onChange={({ target }: ChangeEvent<HTMLInputElement>) =>
+                setFullName(target.value)
+              }
               label="Full Name"
               placeholder="John"
               type="text"
