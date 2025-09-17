@@ -1,6 +1,6 @@
 import Input from "@/components/Inputs/Input";
 import AuthLayout from "@/components/layout/AuthLayout";
-import { useUser } from "@/hooks/useUser";
+import { useUser } from "@/context/useUser";
 import { API_PATHS } from "@/utils/apiPaths";
 import axiosInstance from "@/utils/axiosInstance";
 import { validateEmail } from "@/utils/helper";

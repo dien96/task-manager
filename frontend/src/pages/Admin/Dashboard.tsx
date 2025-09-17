@@ -1,28 +1,44 @@
 import InfoCard from "@/components/Cards/InfoCard";
+import CustomBarChart, {
+  type BarChartData,
+} from "@/components/Charts/CustomBarChart";
+import CustomPieChart, {
+  type PieChartData,
+} from "@/components/Charts/CustomPieChart";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import TaskListTable from "@/components/TaskListTable";
+import TaskListTable, { type Task } from "@/components/TaskListTable";
 import { UserContext } from "@/context/UserContext";
 import { useUserAuth } from "@/hooks/useUserAuth";
 import { API_PATHS } from "@/utils/apiPaths";
 import axiosInstance from "@/utils/axiosInstance";
 import { addThousandsSeparator } from "@/utils/helper";
 import moment from "moment";
-import { useContext, useEffect, useState } from "react";
-import { IoMdCard } from "react-icons/io";
+import { useContext, useEffect, useState, useCallback } from "react";
 import { LuArrowRight } from "react-icons/lu";
 import { useNavigate } from "react-router-dom";
 
+type TaskDistributionType = {
+  All: number;
+  Pending: number;
+  InProgress: number;
+  Completed: number;
+};
+
+type TaskPriorityLevelsType = {
+  Low: number;
+  Medium: number;
+  High: number;
+};
+
 interface DashboardData {
   charts: {
-    taskDistribution: {
-      All: number;
-      Pending: number;
-      InProgress: number;
-      Completed: number;
-    };
+    taskDistribution: TaskDistributionType;
+    taskPriorityLevels: TaskPriorityLevelsType;
   };
-  recentTasks: [];
+  recentTasks: Task[];
 }
+
+const COLORS = ["#8D51ff", "#00B8DB", "#7BCE00"];
 
 const Dashboard = () => {
   useUserAuth();
@@ -33,29 +49,53 @@ const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null
   );
+  const [pieChartData, setPieChartData] = useState<PieChartData[]>([]);
+  const [barChartData, setBarChartData] = useState<BarChartData[]>([]);
 
-  const getDashboardData = async () => {
+  // Prepare Chart Data
+  const prepareChartData = useCallback((data: DashboardData["charts"]) => {
+    const taskDistribution = data?.taskDistribution || null;
+    const taskPriorityLevels = data?.taskPriorityLevels || null;
+
+    const taskDistributionData = [
+      { status: "Pending", count: taskDistribution?.Pending || 0 },
+      { status: "In Progress", count: taskDistribution?.InProgress || 0 },
+      { status: "Completed", count: taskDistribution?.Completed || 0 },
+    ];
+
+    setPieChartData(taskDistributionData);
+
+    const taskPriorityLevelData = [
+      { priority: "Low", count: taskPriorityLevels?.Low || 0 },
+      { priority: "Medium", count: taskPriorityLevels?.Medium || 0 },
+      { priority: "High", count: taskPriorityLevels?.High || 0 },
+    ];
+
+    setBarChartData(taskPriorityLevelData);
+  }, []);
+
+  // Get Dashboard Data API Call
+  const getDashboardData = useCallback(async () => {
     try {
       const response = await axiosInstance.get(
         API_PATHS.TASKS.GET_DASHBOARD_DATA
       );
       if (response.data) {
         setDashboardData(response.data);
+        prepareChartData(response.data?.charts || null);
       }
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     }
-  };
+  }, [prepareChartData]);
 
   const onSeeMore = () => {
-    navigate("/admin/tasks")
-  }
+    navigate("/admin/tasks");
+  };
 
   useEffect(() => {
     getDashboardData();
-
-    return () => {};
-  }, []);
+  }, [getDashboardData]);
 
   return (
     <DashboardLayout activeMenu="Dashboard">
@@ -87,7 +127,7 @@ const Dashboard = () => {
           />
 
           <InfoCard
-            label="Pending Tasks"
+            label="In Progress Tasks"
             value={addThousandsSeparator(
               dashboardData?.charts?.taskDistribution?.InProgress || 0
             )}
@@ -95,7 +135,7 @@ const Dashboard = () => {
           />
 
           <InfoCard
-            label="Pending Tasks"
+            label="Completed Tasks"
             value={addThousandsSeparator(
               dashboardData?.charts?.taskDistribution?.Completed || 0
             )}
@@ -105,6 +145,26 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-4 md:my-6">
+        <div>
+          <div className="card">
+            <div className="flex items-center justify-between">
+              <h5 className="font-medium">Task Distribution</h5>
+            </div>
+
+            <CustomPieChart data={pieChartData} colors={COLORS} />
+          </div>
+        </div>
+
+        <div>
+          <div className="card">
+            <div className="flex items-center justify-between">
+              <h5 className="font-medium">Priority Levels</h5>
+            </div>
+
+            <CustomBarChart data={barChartData} />
+          </div>
+        </div>
+
         <div className="md:col-span-2">
           <div className="card">
             <div className="flex items-center justify-between">
