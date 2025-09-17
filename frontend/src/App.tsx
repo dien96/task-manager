@@ -17,7 +17,7 @@ import ManageUsers from "./pages/Admin/ManageUsers";
 import UserDashboard from "./pages/User/UserDashboard";
 import MyTasks from "./pages/User/MyTasks";
 import ViewTaskDetails from "./pages/User/ViewTaskDetails";
-import { useUser } from "./context/useUser";
+import { useUser } from "./hooks/useUser";
 import { UserProvider } from "./providers/UserProvider";
 
 const App = () => {
