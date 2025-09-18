@@ -9,6 +9,7 @@ import { LuTrash2 } from "react-icons/lu";
 import { useState } from "react";
 import SelectDropdown from "@/components/Inputs/SelectDropdown";
 import SelectUsers from "@/components/Inputs/SelectUsers";
+import TodoListInput from "@/components/Inputs/TodoListInput";
 
 interface initialStateType {
   title: string;
@@ -44,21 +45,16 @@ const CreateTask = () => {
 
   const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
 
-  const handleValueChange = (key, value) => {
+  const handleValueChange = <K extends keyof initialStateType>(
+    key: K,
+    value: initialStateType[K]
+  ) => {
     setTaskData((prevData) => ({ ...prevData, [key]: value }));
   };
 
   const clearData = () => {
     // Reset form
-    setTaskData({
-      title: "",
-      description: "",
-      priority: "Low",
-      dueDate: null,
-      assignedTo: [],
-      todoChecklist: [],
-      attachments: [],
-    });
+    setTaskData(initialState);
   };
 
   // Create Task
@@ -155,7 +151,9 @@ const CreateTask = () => {
               </div>
 
               <div className="col-span-12 md:col-span-3">
-                <label className="text-xs font-medium text-slate-600">Assign To</label>
+                <label className="text-xs font-medium text-slate-600">
+                  Assign To
+                </label>
 
                 <SelectUsers
                   selectedUsers={taskData.assignedTo}
@@ -164,6 +162,19 @@ const CreateTask = () => {
                   }}
                 />
               </div>
+            </div>
+
+            <div className="mt-3">
+              <label className="text-xs font-medium text-slate-600">
+                TODO Checklist
+              </label>
+
+              <TodoListInput
+                todoList={taskData?.todoChecklist}
+                setTodoList={(value) =>
+                  handleValueChange("todoChecklist", typeof value === "function" ? value(taskData.todoChecklist) : value)
+                }
+              />
             </div>
           </div>
         </div>
