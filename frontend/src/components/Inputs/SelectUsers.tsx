@@ -48,7 +48,7 @@ const SelectUsers = ({ selectedUsers, setSelectedUsers }: SelectUsersProps) => {
 
   const selectedUserAvatars = allUsers
     .filter((user) => selectedUsers.includes(user._id))
-    .map((user) => user.profileImageUrl);
+    .map((user) => user.profileImageUrl || "/avatar.svg");
 
   useEffect(() => {
     getAllUsers();
