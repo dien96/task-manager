@@ -10,6 +10,7 @@ import { useState } from "react";
 import SelectDropdown from "@/components/Inputs/SelectDropdown";
 import SelectUsers from "@/components/Inputs/SelectUsers";
 import TodoListInput from "@/components/Inputs/TodoListInput";
+import AddAttachmentsInput from "@/components/Inputs/AddAttachmentsInput";
 
 interface initialStateType {
   title: string;
@@ -40,7 +41,7 @@ const CreateTask = () => {
 
   const [currentTask, setCurrentTask] = useState(null);
 
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>("");
   const [loading, setLoading] = useState(false);
 
   const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
@@ -58,12 +59,69 @@ const CreateTask = () => {
   };
 
   // Create Task
-  const createTask = async () => {};
+  const createTask = async () => {
+    setLoading(true);
+
+    try {
+      const todoList = taskData.todoChecklist?.map((item) => ({
+        text: item,
+        completed: false,
+      }));
+
+      await axiosInstance.post(API_PATHS.TASKS.CREATE_TASK, {
+        ...taskData,
+        dueDate: taskData.dueDate
+          ? new Date(taskData.dueDate).toISOString()
+          : null,
+        todoChecklist: todoList,
+      });
+
+      toast.success("Task Created Successfully");
+
+      clearData();
+    } catch (error) {
+      console.error("Error creating task", error);
+      setLoading(false);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Update Task
   const updateTask = async () => {};
 
-  const handleSubmit = async () => {};
+  const handleSubmit = async () => {
+    setError(null);
+
+    // Input validation
+    if (!taskData.title.trim()) {
+      setError("Title is required");
+      return;
+    }
+    if (!taskData.description.trim()) {
+      setError("Description is required");
+      return;
+    }
+    if (!taskData.dueDate) {
+      setError("Due date is required");
+      return;
+    }
+    if (taskData.assignedTo?.length === 0) {
+      setError("Task not assigned to any member");
+      return;
+    }
+    if (taskData.todoChecklist?.length === 0) {
+      setError("Add at least one todo task");
+      return;
+    }
+
+    if (taskId) {
+      updateTask();
+      return;
+    }
+
+    createTask();
+  };
 
   // get Task info by ID
   const getTaskDetailsByID = async () => {};
@@ -129,7 +187,7 @@ const CreateTask = () => {
                 <SelectDropdown
                   options={PRIORITY_DATA}
                   value={taskData.priority}
-                  onChange={(value) => handleValueChange("priority", value)}
+                  onChange={(value) => handleValueChange("priority", String(value))}
                   placeholder="Select Priority"
                 />
               </div>
@@ -158,7 +216,12 @@ const CreateTask = () => {
                 <SelectUsers
                   selectedUsers={taskData.assignedTo}
                   setSelectedUsers={(value) => {
-                    handleValueChange("assignedTo", value);
+                    handleValueChange(
+                      "assignedTo",
+                      typeof value === "function"
+                        ? value(taskData.assignedTo)
+                        : value
+                    );
                   }}
                 />
               </div>
@@ -172,9 +235,46 @@ const CreateTask = () => {
               <TodoListInput
                 todoList={taskData?.todoChecklist}
                 setTodoList={(value) =>
-                  handleValueChange("todoChecklist", typeof value === "function" ? value(taskData.todoChecklist) : value)
+                  handleValueChange(
+                    "todoChecklist",
+                    typeof value === "function"
+                      ? value(taskData.todoChecklist)
+                      : value
+                  )
                 }
               />
+            </div>
+
+            <div className="mt-3">
+              <label className="text-xs font-medium text-slate-600">
+                Add Attachments
+              </label>
+
+              <AddAttachmentsInput
+                attachments={taskData?.attachments}
+                setAttachments={(value) =>
+                  handleValueChange(
+                    "attachments",
+                    typeof value === "function"
+                      ? value(taskData.attachments)
+                      : value
+                  )
+                }
+              />
+            </div>
+
+            {error && (
+              <p className="text-xs font-medium text-red-500 mt-5">{error}</p>
+            )}
+
+            <div className="flex justify-end mt-7">
+              <button
+                className="add-btn"
+                onClick={handleSubmit}
+                disabled={loading}
+              >
+                {taskId ? "UPDATE TASK" : "CREATE TASK"}
+              </button>
             </div>
           </div>
         </div>

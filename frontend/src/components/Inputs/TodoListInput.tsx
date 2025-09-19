@@ -12,7 +12,7 @@ type TodoListInputProps = {
 };
 
 const TodoListInput = ({ todoList, setTodoList }: TodoListInputProps) => {
-  const [option, setOption] = useState("");
+  const [option, setOption] = useState<string>("");
 
   // Function to handle adding an option
   const handleAddOption = () => {
