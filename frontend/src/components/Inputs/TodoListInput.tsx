@@ -1,4 +1,9 @@
-import { useState, type Dispatch, type SetStateAction } from "react";
+import {
+  useState,
+  type Dispatch,
+  type KeyboardEvent,
+  type SetStateAction,
+} from "react";
 import { HiMiniPlus, HiOutlineTrash } from "react-icons/hi2";
 
 type TodoListInputProps = {
@@ -21,6 +26,14 @@ const TodoListInput = ({ todoList, setTodoList }: TodoListInputProps) => {
   const handleDeleteOption = (index: number) => {
     const updateArr = todoList.filter((_, idx) => idx !== index);
     setTodoList(updateArr);
+  };
+
+  // Handle when pressing Enter in input
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault(); // supaya form tidak submit
+      handleAddOption();
+    }
   };
   return (
     <div>
@@ -53,6 +66,7 @@ const TodoListInput = ({ todoList, setTodoList }: TodoListInputProps) => {
           placeholder="Enter Task"
           value={option}
           onChange={({ target }) => setOption(target.value)}
+          onKeyDown={handleKeyDown}
           className="w-full text-[13px] text-black outline-none bg-white border border-gray-100 px-3 py-2 rounded-md"
         />
 
