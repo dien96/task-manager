@@ -3,7 +3,7 @@ import axiosInstance from "@/utils/axiosInstance";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { LuUsers } from "react-icons/lu";
 import Modal from "../Modal";
-import AvatarGroup from "../layout/AvatarGroup";
+import AvatarGroup from "../AvatarGroup";
 
 interface User {
   _id: string;
